@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entering the Void…</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050508;
+      --fg: #e8e0d5;
+      --accent: #ff3c3c;
+      --dim: #3a3530;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'DM Mono', monospace;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 100;
+      animation: noiseShift 0.08s steps(1) infinite;
+    }
+
+    @keyframes noiseShift {
+      0%   { transform: translate(0,0); }
+      25%  { transform: translate(-2px,1px); }
+      50%  { transform: translate(2px,-1px); }
+      75%  { transform: translate(-1px,2px); }
+      100% { transform: translate(1px,-2px); }
+    }
+
+    /* Custom cursor */
+    #cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 999;
+      transform: translate(-50%,-50%);
+      transition: transform 0.05s;
+      mix-blend-mode: difference;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .stage {
+      position: fixed; inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    /* Big label */
+    .label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 12vw, 9rem);
+      letter-spacing: 0.12em;
+      line-height: 1;
+      color: var(--fg);
+      position: relative;
+      animation: flicker 6s ease-in-out infinite;
+    }
+
+    .label .line2 {
+      color: var(--accent);
+      display: block;
+    }
+
+    @keyframes flicker {
+      0%, 94%, 96%, 98%, 100% { opacity: 1; }
+      95%, 97% { opacity: 0.6; }
+    }
+
+    /* Glitch effect on label */
+    .label::before, .label::after {
+      content: attr(data-text);
+      position: absolute; top: 0; left: 0;
+      width: 100%;
+      overflow: hidden;
+      clip-path: inset(0 0 0 0);
+    }
+    .label::before {
+      color: #0ff;
+      animation: glitchTop 5s steps(1) infinite;
+      text-shadow: -2px 0 #f0f;
+    }
+    .label::after {
+      color: #f0f;
+      animation: glitchBot 5s steps(1) infinite;
+      text-shadow: 2px 0 #0ff;
+    }
+
+    @keyframes glitchTop {
+      0%, 90%, 100% { clip-path: inset(100% 0 0 0); transform: translate(0); }
+      91% { clip-path: inset(10% 0 70% 0); transform: translate(-4px, -2px); }
+      92% { clip-path: inset(30% 0 50% 0); transform: translate(4px, 2px); }
+      93% { clip-path: inset(5% 0 80% 0); transform: translate(-2px, 1px); }
+    }
+    @keyframes glitchBot {
+      0%, 90%, 100% { clip-path: inset(100% 0 0 0); transform: translate(0); }
+      91% { clip-path: inset(60% 0 10% 0); transform: translate(4px, 2px); }
+      92% { clip-path: inset(80% 0 5% 0); transform: translate(-4px, -2px); }
+      93% { clip-path: inset(70% 0 20% 0); transform: translate(2px, -1px); }
+    }
+
+    /* URL display */
+    .url-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border: 1px solid var(--dim);
+      padding: 0.6rem 1.2rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      color: var(--dim);
+      position: relative;
+      overflow: hidden;
+      max-width: 90vw;
+    }
+    .url-bar .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.6); }
+    }
+    .url-bar .url-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #7a7060;
+    }
+    .url-bar::after {
+      content: '';
+      position: absolute; left: -100%; top: 0;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,60,60,0.06), transparent);
+      animation: sweep 2.5s ease-in-out infinite;
+    }
+    @keyframes sweep {
+      0%   { left: -60%; }
+      100% { left: 160%; }
+    }
+
+    /* Countdown ring */
+    .ring-wrap {
+      position: relative;
+      width: 90px; height: 90px;
+    }
+    .ring-wrap svg {
+      position: absolute; inset: 0;
+      transform: rotate(-90deg);
+    }
+    .ring-bg { stroke: var(--dim); }
+    .ring-prog {
+      stroke: var(--accent);
+      stroke-dasharray: 251.2;
+      stroke-dashoffset: 251.2;
+      transition: stroke-dashoffset 1s linear;
+      filter: drop-shadow(0 0 4px var(--accent));
+    }
+    .ring-num {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      color: var(--fg);
+      letter-spacing: 0.05em;
+    }
+
+    /* Status line */
+    .status {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      text-transform: uppercase;
+      animation: blink 1.2s step-start infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Horizontal rule accent */
+    .hr {
+      width: clamp(200px, 40vw, 400px);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--dim), transparent);
+    }
+
+    /* Corner decorations */
+    .corner {
+      position: fixed;
+      width: 40px; height: 40px;
+      border-color: var(--dim);
+      border-style: solid;
+      opacity: 0.5;
+    }
+    .corner.tl { top: 24px; left: 24px; border-width: 1px 0 0 1px; }
+    .corner.tr { top: 24px; right: 24px; border-width: 1px 1px 0 0; }
+    .corner.bl { bottom: 24px; left: 24px; border-width: 0 0 1px 1px; }
+    .corner.br { bottom: 24px; right: 24px; border-width: 0 1px 1px 0; }
+
+    /* Flash on redirect */
+    #flash {
+      position: fixed; inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 200;
+      transition: opacity 0.1s;
+    }
+    #flash.go { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div id="cursor"></div>
+  <div id="flash"></div>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
+  <div class="stage">
+    <div class="label" data-text="ENTERING">
+      ENTERING<span class="line2">THE VOID</span>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="ring-wrap">
+      <svg viewBox="0 0 90 90" width="90" height="90">
+        <circle class="ring-bg" cx="45" cy="45" r="40" fill="none" stroke-width="2"/>
+        <circle class="ring-prog" id="ringProg" cx="45" cy="45" r="40" fill="none" stroke-width="2"/>
+      </svg>
+      <div class="ring-num" id="countNum">5</div>
+    </div>
+
+    <div class="url-bar">
+      <span class="dot"></span>
+      <span class="url-text">youtu.be › shorts › UoMxm8_Zpdc</span>
+    </div>
+
+    <div class="status" id="status">INITIALISING PORTAL</div>
+  </div>
+
+  <script>
+    // Custom cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+    });
+
+    // Countdown + redirect
+    const TARGET = 'https://youtube.com/shorts/UoMxm8_Zpdc';
+    const TOTAL  = 5;
+    const CIRCUM = 251.2;
+    const ring   = document.getElementById('ringProg');
+    const num    = document.getElementById('countNum');
+    const status = document.getElementById('status');
+    const flash  = document.getElementById('flash');
+
+    const messages = [
+      'INITIALISING PORTAL',
+      'CALIBRATING VECTORS',
+      'BENDING SPACETIME',
+      'ALMOST THERE…',
+      'LAUNCHING ▶',
+    ];
+
+    let count = TOTAL;
+
+    function tick() {
+      const offset = CIRCUM - (CIRCUM * (TOTAL - count + 1) / TOTAL);
+      ring.style.strokeDashoffset = offset;
+      num.textContent = count;
+      status.textContent = messages[TOTAL - count] || messages[messages.length - 1];
+
+      if (count <= 0) {
+        flash.classList.add('go');
+        setTimeout(() => { window.location.href = TARGET; }, 150);
+        return;
+      }
+      count--;
+      setTimeout(tick, 1000);
+    }
+
+    // Kick off after short pause
+    setTimeout(tick, 400);
+  </script>
+</body>
+</html>
